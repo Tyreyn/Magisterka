@@ -21,6 +21,7 @@ import android.app.Fragment;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.graphics.drawable.Drawable;
 import android.hardware.Camera;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
@@ -38,7 +39,9 @@ import android.os.Trace;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
+import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 import android.view.View;
@@ -55,8 +58,10 @@ import android.widget.Toast;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import org.PolandSignsDetection.env.ImageUtils;
 import org.PolandSignsDetection.env.Logger;
@@ -90,6 +95,7 @@ public abstract class CameraActivity extends AppCompatActivity
 
   private LinearLayout bottomSheetLayout;
   private LinearLayout gestureLayout;
+  private ConstraintLayout signSheetLayout;
   private BottomSheetBehavior<LinearLayout> sheetBehavior;
 
   protected TextView frameValueTextView, cropValueTextView, inferenceTimeTextView;
@@ -102,8 +108,10 @@ public abstract class CameraActivity extends AppCompatActivity
   int currentDevice = -1;
   int currentModel = -1;
   int currentNumThreads = -1;
-
+  protected  ArrayList<ImageView> signImages = new ArrayList<ImageView>();
   ArrayList<String> deviceStrings = new ArrayList<String>();
+  public LinkedList<String> FiveLastSigns = new LinkedList<String>();
+  protected boolean newSign = false;
 
   @Override
   protected void onCreate(final Bundle savedInstanceState) {
@@ -112,9 +120,6 @@ public abstract class CameraActivity extends AppCompatActivity
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
     setContentView(R.layout.tfe_od_activity_camera);
-    Toolbar toolbar = findViewById(R.id.toolbar);
-    setSupportActionBar(toolbar);
-    getSupportActionBar().setDisplayShowTitleEnabled(false);
 
     if (hasPermission()) {
       setFragment();
@@ -145,6 +150,15 @@ public abstract class CameraActivity extends AppCompatActivity
               }
             });
 
+    signSheetLayout = findViewById(R.id.layout_traffic_signs);
+    for (int i = 0; i<signSheetLayout.getChildCount(); i++){
+      try {
+        signImages.add((ImageView) signSheetLayout.getChildAt(i));
+      }
+      catch (Exception ex){
+        LOGGER.e("nie można znaleźć ImageView" + ex);
+      }
+    }
     bottomSheetLayout = findViewById(R.id.bottom_sheet_layout);
     gestureLayout = findViewById(R.id.gesture_layout);
     sheetBehavior = BottomSheetBehavior.from(bottomSheetLayout);
@@ -220,6 +234,7 @@ public abstract class CameraActivity extends AppCompatActivity
 
     plusImageView.setOnClickListener(this);
     minusImageView.setOnClickListener(this);
+    InitializeFiveSigns();
   }
 
 
@@ -242,6 +257,30 @@ public abstract class CameraActivity extends AppCompatActivity
     return res;
   }
 
+  public void InitializeFiveSigns(){
+    while (FiveLastSigns.size() <= 5){
+      FiveLastSigns.add("");
+    }
+    ChangeImage();
+  }
+  public void ChangeImage(){
+    AssetManager assetManager = getAssets();
+    InputStream istr = null;
+    int signIndex = 5;
+    for(int imageIndex = 0; imageIndex<signImages.size();imageIndex++){
+      ImageView image = signImages.get(imageIndex);
+      try {
+        istr = assetManager.open("Meta/"+FiveLastSigns.get(signIndex).toString()+".png");
+      } catch (IOException e) {
+        istr = null;
+        e.printStackTrace();
+      }
+      Drawable d = Drawable.createFromStream(istr, null);
+      image.setImageDrawable(d);
+      signIndex--;
+    }
+    newSign = false;
+  }
   protected int[] getRgbBytes() {
     imageConverter.run();
     return rgbBytes;

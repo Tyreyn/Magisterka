@@ -16,6 +16,9 @@ package org.PolandSignsDetection;
  * limitations under the License.
  */
 
+import static android.util.Log.*;
+
+import android.annotation.SuppressLint;
 import android.app.Fragment;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
@@ -23,6 +26,7 @@ import android.hardware.Camera.CameraInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.LayoutInflater;
@@ -66,7 +70,15 @@ public class LegacyCameraConnectionFragment extends Fragment {
             final SurfaceTexture texture, final int width, final int height) {
 
           int index = getCameraId();
-          camera = Camera.open(index);
+
+          try {
+            camera = Camera.open(index);
+          }
+          catch(Exception ex)
+          {
+            Log.e(getString(R.string.tfe_od_app_name), "failed to connect camera");
+            ex.printStackTrace();
+          }
 
           try {
             Camera.Parameters parameters = camera.getParameters();

@@ -16,6 +16,7 @@
 
 package org.PolandSignsDetection;
 
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -25,16 +26,23 @@ import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.media.ImageReader.OnImageAvailableListener;
 import android.os.SystemClock;
 import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import androidx.constraintlayout.widget.ConstraintLayout;
+
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 import org.PolandSignsDetection.customview.OverlayView;
 import org.PolandSignsDetection.customview.OverlayView.DrawCallback;
@@ -54,7 +62,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     private static final Logger LOGGER = new Logger();
 
     private static final DetectorMode MODE = DetectorMode.TF_OD_API;
-    private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.3f;
+    private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.8f;
     private static final boolean MAINTAIN_ASPECT = true;
     private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 640);
     private static final boolean SAVE_PREVIEW_BITMAP = false;
@@ -79,6 +87,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     private MultiBoxTracker tracker;
 
     private BorderedText borderedText;
+
+
+
 
     @Override
     public void onPreviewSizeChosen(final Size size, final int rotation) {
@@ -269,9 +280,13 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                             final RectF location = result.getLocation();
                             if (location != null && result.getConfidence() >= minimumConfidence) {
                                 canvas.drawRect(location, paint);
-
+                                String id = result.getTitle();
+                                Log.e("Znaleziono: {0}", id);
                                 cropToFrameTransform.mapRect(location);
-
+                                if (!id.equals(FiveLastSigns.peekLast())){
+                                    SetLastFiveSigns(id);
+                                    Log.d("Ostatnie piec: {0}", String.valueOf(FiveLastSigns));
+                                }
                                 result.setLocation(location);
                                 mappedRecognitions.add(result);
                             }
@@ -286,13 +301,25 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                                 new Runnable() {
                                     @Override
                                     public void run() {
+                                        if(newSign) ChangeImage();
                                         showFrameInfo(previewWidth + "x" + previewHeight);
                                         showCropInfo(cropCopyBitmap.getWidth() + "x" + cropCopyBitmap.getHeight());
                                         showInference(lastProcessingTimeMs + "ms");
                                     }
+
                                 });
+
                     }
                 });
+    }
+
+
+    public void SetLastFiveSigns(String newSignTitle){
+        FiveLastSigns.add(newSignTitle);
+        if(FiveLastSigns.size() >= 5){
+            FiveLastSigns.removeFirst();
+        }
+        newSign = true;
     }
 
     @Override

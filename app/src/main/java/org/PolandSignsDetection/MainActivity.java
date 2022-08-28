@@ -32,8 +32,36 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.3f;
+    public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.85f;
+    private static final Logger LOGGER = new Logger();
 
+    public static final int TF_OD_API_INPUT_SIZE = 640;
+
+    private static final boolean TF_OD_API_IS_QUANTIZED = false;
+
+    private static final String TF_OD_API_MODEL_FILE = "yolov5.tflite";
+
+    private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/customclasses.txt";
+
+    // Minimum detection confidence to track a detection.
+    private static final boolean MAINTAIN_ASPECT = true;
+    private Integer sensorOrientation = 90;
+
+    private Classifier detector;
+
+    private Matrix frameToCropTransform;
+    private Matrix cropToFrameTransform;
+    private MultiBoxTracker tracker;
+    private OverlayView trackingOverlay;
+
+    protected int previewWidth = 0;
+    protected int previewHeight = 0;
+
+    private Bitmap sourceBitmap;
+    private Bitmap cropBitmap;
+
+    private Button cameraButton, detectButton;
+    private ImageView imageView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,36 +101,6 @@ public class MainActivity extends AppCompatActivity {
         System.err.println(configurationInfo.reqGlEsVersion >= 0x30000);
         System.err.println(String.format("%X", configurationInfo.reqGlEsVersion));
     }
-
-    private static final Logger LOGGER = new Logger();
-
-    public static final int TF_OD_API_INPUT_SIZE = 640;
-
-    private static final boolean TF_OD_API_IS_QUANTIZED = false;
-
-    private static final String TF_OD_API_MODEL_FILE = "yolov5.tflite";
-
-    private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/customclasses.txt";
-
-    // Minimum detection confidence to track a detection.
-    private static final boolean MAINTAIN_ASPECT = true;
-    private Integer sensorOrientation = 90;
-
-    private Classifier detector;
-
-    private Matrix frameToCropTransform;
-    private Matrix cropToFrameTransform;
-    private MultiBoxTracker tracker;
-    private OverlayView trackingOverlay;
-
-    protected int previewWidth = 0;
-    protected int previewHeight = 0;
-
-    private Bitmap sourceBitmap;
-    private Bitmap cropBitmap;
-
-    private Button cameraButton, detectButton;
-    private ImageView imageView;
 
     private void initBox() {
         previewHeight = TF_OD_API_INPUT_SIZE;

@@ -176,12 +176,12 @@ public class YoloV5Classifier implements Classifier {
     }
 
     public void setNumThreads(int num_threads) {
-        if (tfLite != null) tfLite.setNumThreads(num_threads);
+        if (tfLite != null) tfliteOptions.setNumThreads(num_threads);
     }
 
     @Override
     public void setUseNNAPI(boolean isChecked) {
-//        if (tfLite != null) tfLite.setUseNNAPI(isChecked);
+//        if (tfLite != null) tfliteOptions.setUseNNAPI(isChecked);
     }
 
     private void recreateInterpreter() {

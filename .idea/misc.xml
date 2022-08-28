@@ -3,12 +3,19 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/athos/AndroidStudioProjects/PolandSignsDetection/app/src/main/res/drawable/bottom_sheet_bg.xml" value="0.1445" />
+        <entry key="..\:/Users/athos/AndroidStudioProjects/PolandSignsDetection/app/src/main/res/drawable/ic_baseline_add.xml" value="0.1445" />
+        <entry key="..\:/Users/athos/AndroidStudioProjects/PolandSignsDetection/app/src/main/res/drawable/ic_launcher_background.xml" value="0.1445" />
+        <entry key="..\:/Users/athos/AndroidStudioProjects/PolandSignsDetection/app/src/main/res/drawable/rectangle.xml" value="0.1445" />
         <entry key="..\:/Users/athos/AndroidStudioProjects/PolandSignsDetection/app/src/main/res/layout/activity_main.xml" value="0.215625" />
         <entry key="..\:/Users/athos/AndroidStudioProjects/PolandSignsDetection/app/src/main/res/layout/deviceview_row.xml" value="0.215625" />
         <entry key="..\:/Users/athos/AndroidStudioProjects/PolandSignsDetection/app/src/main/res/layout/listview_row.xml" value="0.215625" />
-        <entry key="..\:/Users/athos/AndroidStudioProjects/PolandSignsDetection/app/src/main/res/layout/tfe_od_activity_camera.xml" value="0.13191296464188576" />
+        <entry key="..\:/Users/athos/AndroidStudioProjects/PolandSignsDetection/app/src/main/res/layout/tfe_od_activity_camera.xml" value="0.33" />
         <entry key="..\:/Users/athos/AndroidStudioProjects/PolandSignsDetection/app/src/main/res/layout/tfe_od_camera_connection_fragment_tracking.xml" value="0.215625" />
-        <entry key="..\:/Users/athos/AndroidStudioProjects/PolandSignsDetection/app/src/main/res/layout/tfe_od_layout_bottom_sheet.xml" value="0.215625" />
+        <entry key="..\:/Users/athos/AndroidStudioProjects/PolandSignsDetection/app/src/main/res/layout/tfe_od_layout_bottom_sheet.xml" value="0.2" />
+        <entry key="..\:/Users/athos/AndroidStudioProjects/PolandSignsDetection/app/src/main/res/layout/tfe_od_layout_traffic_signs.xml" value="0.33" />
+        <entry key="..\:/Users/athos/AndroidStudioProjects/PolandSignsDetection/app/src/main/res/layout/tfe_od_layout_traffic_signs_sheet.xml" value="0.25" />
+        <entry key="..\:/Users/athos/AndroidStudioProjects/PolandSignsDetection/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.1445" />
       </map>
     </option>
   </component>

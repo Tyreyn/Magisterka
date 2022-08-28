@@ -62,7 +62,6 @@ import java.util.concurrent.TimeUnit;
 import org.PolandSignsDetection.customview.AutoFitTextureView;
 import org.PolandSignsDetection.env.Logger;
 
-@SuppressLint("ValidFragment")
 public class CameraConnectionFragment extends Fragment {
   private static final Logger LOGGER = new Logger();
 

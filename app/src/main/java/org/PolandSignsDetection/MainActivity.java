@@ -1,22 +1,33 @@
 package org.PolandSignsDetection;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
+import android.Manifest;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ConfigurationInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.location.Location;
+import android.location.LocationListener;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
+
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
 
 import org.PolandSignsDetection.customview.OverlayView;
 import org.PolandSignsDetection.env.ImageUtils;
@@ -62,6 +73,8 @@ public class MainActivity extends AppCompatActivity {
 
     private Button cameraButton, detectButton;
     private ImageView imageView;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,17 +84,21 @@ public class MainActivity extends AppCompatActivity {
         detectButton = findViewById(R.id.detectButton);
         imageView = findViewById(R.id.imageView);
 
+        GPSTracker gps = new GPSTracker(this);
+        LOGGER.d("longitude: "+gps.longitude+"latitude: "+gps.latitude);
         cameraButton.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, DetectorActivity.class)));
 
         detectButton.setOnClickListener(v -> {
             Handler handler = new Handler();
-
+            gps.performLocationUpdate();
+            LOGGER.d("longitude: "+gps.longitude+"latitude: "+gps.latitude);
             new Thread(() -> {
                 final List<Classifier.Recognition> results = detector.recognizeImage(cropBitmap);
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        handleResult(cropBitmap, results);
+                        handleResult(cropBitmap, results
+                        );
                     }
                 });
             }).start();

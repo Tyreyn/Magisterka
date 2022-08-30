@@ -90,7 +90,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
 
 
-
     @Override
     public void onPreviewSizeChosen(final Size size, final int rotation) {
         final float textSizePx =
@@ -252,6 +251,11 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 new Runnable() {
                     @Override
                     public void run() {
+                        gps.performLocationUpdate();
+
+                        showFrameInfo(Double.toString(gps.latitude));
+                        showCropInfo(Double.toString(gps.longitude));
+                        LOGGER.d("latitude: " + gps.latitude+ "longitude: " + gps.longitude);
                         LOGGER.i("Running detection on image " + currTimestamp);
                         final long startTime = SystemClock.uptimeMillis();
                         final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);
@@ -302,8 +306,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                                     @Override
                                     public void run() {
                                         if(newSign) ChangeImage();
-                                        showFrameInfo(previewWidth + "x" + previewHeight);
-                                        showCropInfo(cropCopyBitmap.getWidth() + "x" + cropCopyBitmap.getHeight());
+
                                         showInference(lastProcessingTimeMs + "ms");
                                     }
 

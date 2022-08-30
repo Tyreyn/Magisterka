@@ -27,6 +27,7 @@ import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.location.Location;
 import android.media.Image;
 import android.media.Image.Plane;
 import android.media.ImageReader;
@@ -40,6 +41,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import android.util.Log;
 import android.util.Size;
@@ -112,6 +115,7 @@ public abstract class CameraActivity extends AppCompatActivity
   ArrayList<String> deviceStrings = new ArrayList<String>();
   public LinkedList<String> FiveLastSigns = new LinkedList<String>();
   protected boolean newSign = false;
+  public GPSTracker gps;
 
   @Override
   protected void onCreate(final Bundle savedInstanceState) {
@@ -121,6 +125,8 @@ public abstract class CameraActivity extends AppCompatActivity
 
     setContentView(R.layout.tfe_od_activity_camera);
 
+    gps = new GPSTracker(this);
+    LOGGER.d("longitude: "+gps.longitude+"latitude: "+gps.latitude);
     if (hasPermission()) {
       setFragment();
     } else {
@@ -149,7 +155,6 @@ public abstract class CameraActivity extends AppCompatActivity
                 updateActiveModel();
               }
             });
-
     signSheetLayout = findViewById(R.id.layout_traffic_signs);
     for (int i = 0; i<signSheetLayout.getChildCount(); i++){
       try {

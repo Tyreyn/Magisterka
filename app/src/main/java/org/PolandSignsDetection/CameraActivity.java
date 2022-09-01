@@ -27,7 +27,6 @@ import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.params.StreamConfigurationMap;
-import android.location.Location;
 import android.media.Image;
 import android.media.Image.Plane;
 import android.media.ImageReader;
@@ -39,12 +38,8 @@ import android.os.HandlerThread;
 import android.os.Trace;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
-import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 import android.view.View;
@@ -52,7 +47,6 @@ import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -168,7 +162,7 @@ public abstract class CameraActivity extends AppCompatActivity
     gestureLayout = findViewById(R.id.gesture_layout);
     sheetBehavior = BottomSheetBehavior.from(bottomSheetLayout);
     bottomSheetArrowImageView = findViewById(R.id.bottom_sheet_arrow);
-    modelView = findViewById((R.id.model_list));
+    modelView = findViewById((R.id.trace_list));
 
     modelStrings = getModelStrings(getAssets(), ASSET_PATH);
     modelView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);

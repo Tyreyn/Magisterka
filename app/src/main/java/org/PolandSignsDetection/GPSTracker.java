@@ -40,6 +40,8 @@ public class GPSTracker extends AppCompatActivity {
 
     protected double latitude;
 
+    protected double speed;
+
     public GPSTracker(Context context) {
         this.mContext = context;
         mActivity = (Activity) context;
@@ -89,6 +91,7 @@ public class GPSTracker extends AppCompatActivity {
     private void updateLocation(Location location){
         longitude = location.getLongitude();
         latitude = location.getLatitude();
+        speed = location.getSpeed();
     }
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {

@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ConfigurationInfo;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -38,6 +39,7 @@ import org.PolandSignsDetection.tflite.YoloV5Classifier;
 import org.PolandSignsDetection.tracking.MultiBoxTracker;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -73,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Button cameraButton, detectButton;
     private ImageView imageView;
-
+    ArrayList<String> deviceStrings = new ArrayList<String>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,36 +83,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         cameraButton = findViewById(R.id.cameraButton);
-        detectButton = findViewById(R.id.detectButton);
-        imageView = findViewById(R.id.imageView);
 
-        GPSTracker gps = new GPSTracker(this);
-        LOGGER.d("longitude: "+gps.longitude+"latitude: "+gps.latitude);
-        cameraButton.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, DetectorActivity.class)));
+        cameraButton.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, TracesActivity.class)));
 
-        detectButton.setOnClickListener(v -> {
-            Handler handler = new Handler();
-            gps.performLocationUpdate();
-            LOGGER.d("longitude: "+gps.longitude+"latitude: "+gps.latitude);
-            new Thread(() -> {
-                final List<Classifier.Recognition> results = detector.recognizeImage(cropBitmap);
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        handleResult(cropBitmap, results
-                        );
-                    }
-                });
-            }).start();
+        AssetManager assetManager = getAssets();
+        readTracesFile(assetManager, "Traces/");
 
-        });
-        this.sourceBitmap = Utils.getBitmapFromAsset(MainActivity.this, "test.png");
-
-        this.cropBitmap = Utils.processBitmap(sourceBitmap, TF_OD_API_INPUT_SIZE);
-
-        this.imageView.setImageBitmap(cropBitmap);
-
-        initBox();
         ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
 
@@ -119,66 +97,21 @@ public class MainActivity extends AppCompatActivity {
         System.err.println(String.format("%X", configurationInfo.reqGlEsVersion));
     }
 
-    private void initBox() {
-        previewHeight = TF_OD_API_INPUT_SIZE;
-        previewWidth = TF_OD_API_INPUT_SIZE;
-        frameToCropTransform =
-                ImageUtils.getTransformationMatrix(
-                        previewWidth, previewHeight,
-                        TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE,
-                        sensorOrientation, MAINTAIN_ASPECT);
-
-        cropToFrameTransform = new Matrix();
-        frameToCropTransform.invert(cropToFrameTransform);
-
-        tracker = new MultiBoxTracker(this);
-        trackingOverlay = findViewById(R.id.tracking_overlay);
-        trackingOverlay.addCallback(
-                canvas -> tracker.draw(canvas));
-
-        tracker.setFrameConfiguration(TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE, sensorOrientation);
-
+    private void readTracesFile(AssetManager mgr, String path) {
+        ArrayList<String> res = new ArrayList<String>();
         try {
-            detector =
-                    YoloV5Classifier.create(
-                            getAssets(),
-                            TF_OD_API_MODEL_FILE,
-                            TF_OD_API_LABELS_FILE,
-                            TF_OD_API_IS_QUANTIZED,
-                            TF_OD_API_INPUT_SIZE);
-        } catch (final IOException e) {
-            e.printStackTrace();
-            LOGGER.e(e, "Exception initializing classifier!");
-            Toast toast =
-                    Toast.makeText(
-                            getApplicationContext(), "Classifier could not be initialized", Toast.LENGTH_SHORT);
-            toast.show();
-            finish();
-        }
-    }
-
-    private void handleResult(Bitmap bitmap, List<Classifier.Recognition> results) {
-        final Canvas canvas = new Canvas(bitmap);
-        final Paint paint = new Paint();
-        paint.setColor(Color.RED);
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(2.0f);
-
-        final List<Classifier.Recognition> mappedRecognitions =
-                new LinkedList<Classifier.Recognition>();
-
-        for (final Classifier.Recognition result : results) {
-            final RectF location = result.getLocation();
-            if (location != null && result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API) {
-                canvas.drawRect(location, paint);
-//                cropToFrameTransform.mapRect(location);
-//
-//                result.setLocation(location);
-//                mappedRecognitions.add(result);
+            String[] files = mgr.list(path);
+            for (String file : files) {
+                String[] splits = file.split("\\.");
+                if (splits[splits.length - 1].equals("txt")) {
+                    LOGGER.d("[TRACES_FILE] znaleziono:" +file);
+                    res.add(file);
+                }
             }
         }
-//        tracker.trackResults(mappedRecognitions, new Random().nextInt());
-//        trackingOverlay.postInvalidate();
-        imageView.setImageBitmap(bitmap);
+        catch (IOException e)
+        {
+            LOGGER.d("[TRACES_FILE] Błąd przy szukaniu pliku: " + e.getMessage());
+        }
     }
 }

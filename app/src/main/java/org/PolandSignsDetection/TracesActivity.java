@@ -4,15 +4,9 @@ import android.content.Intent;
 import android.content.res.AssetManager;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListView;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -37,12 +31,12 @@ public class TracesActivity extends AppCompatActivity {
     private Button startDetect;
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.choose_trace);
         assetManager = getAssets();
-        readTracesFile(assetManager, TRACES);
-        traceView = (LinearLayout) findViewById(R.id.choose_trace);
+        readTracesFile(assetManager);
+        traceView = (LinearLayout) findViewById(R.id.available_trace);
         /**traceView = findViewById(R.id.trace_list);
         ArrayAdapter<String> deviceAdapter =
                 new ArrayAdapter<>(
@@ -53,7 +47,7 @@ public class TracesActivity extends AppCompatActivity {
     private void setUpTraces(){
         for (int i = 0; i < detectedTraces.size(); i++) {
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             Button btn = new Button(this);
             btn.setId(i);
@@ -62,24 +56,31 @@ public class TracesActivity extends AppCompatActivity {
             btn.setBackgroundColor(Color.rgb(255,255, 255));
             traceView.addView(btn, params);
             startDetect = ((Button) findViewById(id_));
-            startDetect.setOnTouchListener(new View.OnTouchListener() {
+            startDetect.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
-                public boolean onTouch(View view, MotionEvent motionEvent) {
-                    Toast.makeText(TracesActivity.this,"Wczytano mapę: " + view.getId(), Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(TracesActivity.this, DetectorActivity.class);
-                    intent.putExtra("Trasa",parseTraceFile(assetManager,TRACES+"trace"+view.getId()+".txt"));
+                public boolean onLongClick(View view) {
+                    Intent intent = new Intent(TracesActivity.this, ViewTracesActivity.class);
+                    intent.putExtra("Numer_Trasy", view.getId());
+                    intent.putExtra("Trasa",parseTraceFile("trace"+view.getId()+".txt"));
                     startActivity(intent);
                     return false;
                 }
             });
+            startDetect.setOnClickListener((View.OnClickListener) (view) -> {
+                Intent intent = new Intent(TracesActivity.this, DetectorActivity.class);
+                intent.putExtra("Numer_Trasy", view.getId());
+                intent.putExtra("Trasa",parseTraceFile("trace"+view.getId()+".txt"));
+                startActivity(intent);
+            });
         }
     }
-    private String[] parseTraceFile(AssetManager assetManager, String pathToFile){
+    private String[] parseTraceFile(String fileName){
         BufferedReader reader;
         String[] buffor = new String[200];
+        String pathToFile = getFilesDir().getAbsolutePath()+ File.separator+ constants.tracesDirName+fileName;
         int i = 0;
         try{
-            final InputStream file = assetManager.open(pathToFile);
+            final InputStream file = new FileInputStream(pathToFile);
             reader = new BufferedReader(new InputStreamReader(file));
             String line;
             while((line=reader.readLine()) != null){
@@ -90,23 +91,26 @@ public class TracesActivity extends AppCompatActivity {
         } catch(IOException ioe){
             ioe.printStackTrace();
         }
+
+        if (i == 0){
+            return null;
+        }
         return Arrays.copyOfRange(buffor,0,i-1);
     }
-    private void readTracesFile(AssetManager mgr, String path) {
+    private void readTracesFile(AssetManager mgr) {
         detectedTraces = new ArrayList<String>();
+        String dirPath = getFilesDir().getAbsolutePath() + File.separator + constants.tracesDirName;
+
         try {
-            String[] files = mgr.list(path);
-            for (String file : files) {
-                String[] splits = file.split("\\.");
-                if (splits[splits.length - 1].equals("txt")) {
-                    LOGGER.d("[TRACES_FILE] znaleziono:" +file);
-                    detectedTraces.add(file);
+            File directory = new File(dirPath);
+                File[] files = directory.listFiles();
+                for (File file : files) {
+                    LOGGER.d("[TRACES_FILE] znaleziono:" + file);
+                    detectedTraces.add(file.getName());
                 }
+            } catch(Exception e){
+                e.printStackTrace();
             }
-        }
-        catch (IOException e)
-        {
-            LOGGER.d("[TRACES_FILE] Błąd przy szukaniu pliku: " + e.getMessage());
-        }
+
     }
 }

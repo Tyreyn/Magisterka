@@ -13,11 +13,14 @@
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:layout_marginStart="162dp"
+        android:layout_marginTop="280dp"
         android:layout_marginEnd="161dp"
-        android:layout_marginBottom="342dp"
-        android:text="Camera"
+        android:layout_marginBottom="403dp"
+        android:text="Rozpoczęcie detekcji"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintHorizontal_bias="0.51"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

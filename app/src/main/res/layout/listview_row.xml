@@ -4,15 +4,24 @@
     android:layout_height="match_parent">
 
 
-
     <TextView
         android:id="@+id/listview_row_text"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="291dp"
+        android:layout_height="64dp"
         android:layout_marginRight="2dp"
+        android:background="@drawable/item_selector"
         android:padding="10dp"
         android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <ImageView
+        android:id="@+id/listview_row_image"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_marginRight="2dp"
         android:background="@drawable/item_selector"
+        android:padding="10dp"
+        android:textSize="18sp"
         android:textStyle="bold" />
 
 </LinearLayout>

@@ -58,6 +58,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 
 import org.PolandSignsDetection.env.ImageUtils;
@@ -118,9 +119,22 @@ public abstract class CameraActivity extends AppCompatActivity
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
     setContentView(R.layout.tfe_od_activity_camera);
+    int TraceNumber = 0;
+    String[] TraceSignsOrder = null;
 
     gps = new GPSTracker(this);
-    LOGGER.d("longitude: "+gps.longitude+"latitude: "+gps.latitude);
+    if (savedInstanceState == null) {
+      Bundle extras = getIntent().getExtras();
+      if(extras == null) {
+        TraceNumber = 0;
+        TraceSignsOrder = null;
+      } else {
+        TraceNumber = extras.getInt(constants.traceNumberKey);
+        TraceSignsOrder = extras.getStringArray(constants.traceSignOrderKey);
+      }
+    }
+
+    Toast.makeText(CameraActivity.this,"Wczytano mapę: " + TraceNumber, Toast.LENGTH_SHORT).show();
     if (hasPermission()) {
       setFragment();
     } else {
@@ -150,6 +164,8 @@ public abstract class CameraActivity extends AppCompatActivity
               }
             });
     signSheetLayout = findViewById(R.id.layout_traffic_signs);
+
+    // Inicjalizacja pusty pól znaków na kamerze.
     for (int i = 0; i<signSheetLayout.getChildCount(); i++){
       try {
         signImages.add((ImageView) signSheetLayout.getChildAt(i));

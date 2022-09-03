@@ -306,8 +306,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                                     @Override
                                     public void run() {
                                         if(newSign) ChangeImage();
-
-                                        showInference(gps.speed*3.6 + "km/h");
+                                        showInference(lastProcessingTimeMs + "km/h");
                                     }
 
                                 });

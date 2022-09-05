@@ -61,6 +61,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 
 import org.PolandSignsDetection.env.ImageUtils;
@@ -113,6 +114,9 @@ public abstract class CameraActivity extends AppCompatActivity
   public LinkedList<String> FiveLastSigns = new LinkedList<String>();
   protected boolean newSign = false;
   public GPSTracker gps;
+  public String[] TraceSignsOrder;
+  protected LinkedList<String> SignsOnTrace = new LinkedList<>();
+  protected boolean isNewTrace;
 
   @Override
   protected void onCreate(final Bundle savedInstanceState) {
@@ -137,6 +141,16 @@ public abstract class CameraActivity extends AppCompatActivity
     }
 
     Toast.makeText(CameraActivity.this,"Wczytano mapę: " + TraceNumber, Toast.LENGTH_SHORT).show();
+    if(TraceSignsOrder == null){
+      Toast.makeText(CameraActivity.this,"Nowa trasa! Rozpoczęcie rejestracji znaków", Toast.LENGTH_SHORT).show();
+      isNewTrace = true;
+    }
+    else
+    {
+      isNewTrace = false;
+      LOGGER.d("Znaki na trasie: "+ Arrays.toString(TraceSignsOrder));
+    }
+
     if (hasPermission()) {
       setFragment();
     } else {
@@ -226,11 +240,13 @@ public abstract class CameraActivity extends AppCompatActivity
     frameValueTextView = findViewById(R.id.frame_info);
     cropValueTextView = findViewById(R.id.crop_info);
     inferenceTimeTextView = findViewById(R.id.inference_info);
-
+    setSignOnTrace(TraceSignsOrder);
     InitializeFiveSigns();
   }
 
-
+  private void setSignOnTrace(String[] traceFromExtras){
+    TraceSignsOrder = traceFromExtras;
+  }
 
   protected ArrayList<String> getModelStrings(AssetManager mgr, String path){
     ArrayList<String> res = new ArrayList<String>();

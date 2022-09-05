@@ -26,6 +26,7 @@ import android.graphics.Paint.Style;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.media.ImageReader.OnImageAvailableListener;
+import android.media.MediaPlayer;
 import android.os.CountDownTimer;
 import android.os.SystemClock;
 import android.util.Log;
@@ -33,6 +34,8 @@ import android.util.Size;
 import android.util.TypedValue;
 import android.widget.Toast;
 import java.io.IOException;
+import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import org.PolandSignsDetection.customview.OverlayView;
@@ -214,10 +217,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                             {
                                 SetLastFiveSigns(id);
                                 Log.d("Ostatnie piec: {0}", String.valueOf(FiveLastSigns));
+                                Log.d("{0}", String.valueOf(SignsOnTrace));
                             }
                             else if(!id.equals(FiveLastSigns.peekLast())){
                                 SetLastFiveSigns(id);
                                 Log.d("Ostatnie piec: {0}", String.valueOf(FiveLastSigns));
+                                Log.d("{0}", String.valueOf(SignsOnTrace));
                             }
                             result.setLocation(location);
                             mappedRecognitions.add(result);
@@ -272,9 +277,28 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         if(FiveLastSigns.size() >= 5){
             FiveLastSigns.removeFirst();
         }
+
+        CheckIfSignIsAsExpected(newSignTitle);
+
         newSign = true;
     }
 
+    private boolean CheckIfSignIsAsExpected(String newSignTitle){
+        SignsOnTrace.add(newSignTitle);
+        int index = SignsOnTrace.size();
+        if(SignsOnTrace.getLast().toString().equals(Array.get(TraceSignsOrder, index - 1).toString())){
+            Toast.makeText(DetectorActivity.this,"Znaki są zgodne", Toast.LENGTH_SHORT).show();
+            final MediaPlayer mp = MediaPlayer.create(this, R.raw.pass);
+            mp.start();
+            return true;
+        }else{
+            Toast.makeText(DetectorActivity.this,"Ten znak nie został wcześniej spotkany!", Toast.LENGTH_SHORT).show();
+            final MediaPlayer mp = MediaPlayer.create(this, R.raw.fail);
+            mp.start();
+            return false;
+        }
+
+    }
     @Override
     protected int getLayoutId() {
         return R.layout.tfe_od_camera_connection_fragment_tracking;

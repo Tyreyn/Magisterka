@@ -16,6 +16,7 @@
 
 package org.PolandSignsDetection;
 
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -33,7 +34,13 @@ import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -274,30 +281,45 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         }.start();
         isSameSignAway = false;
         FiveLastSigns.add(newSignTitle);
+        SignsOnTrace.add(newSignTitle);
         if(FiveLastSigns.size() >= 5){
             FiveLastSigns.removeFirst();
         }
 
-        CheckIfSignIsAsExpected(newSignTitle);
+        isTraceChanged |= CheckIfSignIsAsExpected();
 
         newSign = true;
     }
 
-    private boolean CheckIfSignIsAsExpected(String newSignTitle){
-        SignsOnTrace.add(newSignTitle);
+    private boolean CheckIfSignIsAsExpected(){
         int index = SignsOnTrace.size();
-        if(SignsOnTrace.getLast().toString().equals(Array.get(TraceSignsOrder, index - 1).toString())){
-            Toast.makeText(DetectorActivity.this,"Znaki są zgodne", Toast.LENGTH_SHORT).show();
+        if(isEmpty)
+        {
             final MediaPlayer mp = MediaPlayer.create(this, R.raw.pass);
-            mp.start();
-            return true;
-        }else{
-            Toast.makeText(DetectorActivity.this,"Ten znak nie został wcześniej spotkany!", Toast.LENGTH_SHORT).show();
-            final MediaPlayer mp = MediaPlayer.create(this, R.raw.fail);
             mp.start();
             return false;
         }
-
+        else {
+            if(SignsOnTrace.size() > TraceSignsOrder.length){
+                Toast.makeText(DetectorActivity.this, "Zapisana trasa została skończona, kontynuacja detekcji.", Toast.LENGTH_SHORT).show();
+                final MediaPlayer mp = MediaPlayer.create(this, R.raw.pass);
+                mp.start();
+                return true;
+            }
+            else {
+                if (SignsOnTrace.getLast().toString().equals(Array.get(TraceSignsOrder, index - 1).toString())) {
+                    Toast.makeText(DetectorActivity.this, "Znaki są zgodne.", Toast.LENGTH_SHORT).show();
+                    final MediaPlayer mp = MediaPlayer.create(this, R.raw.pass);
+                    mp.start();
+                    return false;
+                } else {
+                    Toast.makeText(DetectorActivity.this, "Ten znak nie został wcześniej spotkany!", Toast.LENGTH_SHORT).show();
+                    final MediaPlayer mp = MediaPlayer.create(this, R.raw.fail);
+                    mp.start();
+                    return true;
+                }
+            }
+        }
     }
     @Override
     protected int getLayoutId() {
@@ -318,5 +340,57 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     @Override
     protected void setNumThreads(final int numThreads) {
         runInBackground(() -> detector.setNumThreads(numThreads));
+    }
+
+    @Override
+    protected void onDetectionEnd(boolean isEmpty, boolean isTraceChanged) {
+        if(isEmpty && SignsOnTrace.isEmpty()){
+            DetectorActivity.this.onBackPressed();
+        }
+        else if (isEmpty || isTraceChanged)
+        {
+            AlertDialog.Builder builder1 = new AlertDialog.Builder(DetectorActivity.this);
+            builder1.setMessage("Czy chcesz zapisać trasę?");
+            builder1.setCancelable(true);
+
+            builder1.setPositiveButton(
+                    "Tak",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            WriteTraceToFile();
+                            DetectorActivity.this.onBackPressed();
+                        }
+                    });
+
+            builder1.setNegativeButton(
+                    "Nie",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            DetectorActivity.this.onBackPressed();
+                        }
+                    });
+
+            AlertDialog alert11 = builder1.create();
+            alert11.show();
+        }
+        else
+        {
+            DetectorActivity.this.onBackPressed();
+        }
+    }
+    private void WriteTraceToFile(){
+        String pathToFile = getFilesDir().getAbsolutePath()+ File.separator+
+                constants.tracesDirName+"trace"+TraceNumber+".txt";
+        try(PrintWriter pw = new PrintWriter(pathToFile))
+        {
+            String output = new String();
+            for(String sign : SignsOnTrace){
+                output += sign + "\n";
+            }
+            pw.print(output);
+            pw.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 }

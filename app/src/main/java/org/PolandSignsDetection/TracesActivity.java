@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class TracesActivity extends AppCompatActivity {
-    public static final String TRACES = "Traces/";
     private static final Logger LOGGER = new Logger();
     private LinearLayout traceView;
     protected ArrayList<String> detectedTraces;
@@ -30,8 +29,7 @@ public class TracesActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.choose_trace);
-        assetManager = getAssets();
-        readTracesFile(assetManager);
+        readTracesFile();
         traceView = (LinearLayout) findViewById(R.id.available_trace);
         /**traceView = findViewById(R.id.trace_list);
         ArrayAdapter<String> deviceAdapter =
@@ -91,9 +89,9 @@ public class TracesActivity extends AppCompatActivity {
         if (i == 0){
             return null;
         }
-        return Arrays.copyOfRange(buffor,0,i-1);
+        return Arrays.copyOfRange(buffor,0,i);
     }
-    private void readTracesFile(AssetManager mgr) {
+    private void readTracesFile() {
         detectedTraces = new ArrayList<String>();
         String dirPath = getFilesDir().getAbsolutePath() + File.separator + constants.tracesDirName;
 

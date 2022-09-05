@@ -50,6 +50,7 @@ import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -89,11 +90,11 @@ public abstract class CameraActivity extends AppCompatActivity
   private int[] rgbBytes = null;
   private int yRowStride;
   protected int defaultModelIndex = 0;
-  protected int defaultDeviceIndex = 0;
   private Runnable postInferenceCallback;
   private Runnable imageConverter;
   protected ArrayList<String> modelStrings = new ArrayList<String>();
 
+  private Button stopButton;
   private LinearLayout bottomSheetLayout;
   private LinearLayout gestureLayout;
   private ConstraintLayout signSheetLayout;
@@ -101,14 +102,10 @@ public abstract class CameraActivity extends AppCompatActivity
 
   protected TextView frameValueTextView, cropValueTextView, inferenceTimeTextView;
   protected ImageView bottomSheetArrowImageView;
-  private ImageView plusImageView, minusImageView;
   protected TextViewAdapter modelAdapter;
-  protected TextView threadsTextView;
   protected ListView modelView;
   /** Current indices of device and model. */
-  int currentDevice = -1;
   int currentModel = -1;
-  int currentNumThreads = -1;
   protected  ArrayList<ImageView> signImages = new ArrayList<ImageView>();
   ArrayList<Params> parameters = new ArrayList<Params>();
   public LinkedList<String> FiveLastSigns = new LinkedList<String>();
@@ -117,7 +114,9 @@ public abstract class CameraActivity extends AppCompatActivity
   public String[] TraceSignsOrder;
   protected LinkedList<String> SignsOnTrace = new LinkedList<>();
   protected boolean isNewTrace;
-
+  public int TraceNumber;
+  public boolean isEmpty;
+  public boolean isTraceChanged;
   @Override
   protected void onCreate(final Bundle savedInstanceState) {
     LOGGER.d("onCreate " + this);
@@ -125,7 +124,7 @@ public abstract class CameraActivity extends AppCompatActivity
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
     setContentView(R.layout.tfe_od_activity_camera);
-    int TraceNumber = 0;
+    TraceNumber = 0;
     String[] TraceSignsOrder = null;
 
     gps = new GPSTracker(this);
@@ -172,7 +171,13 @@ public abstract class CameraActivity extends AppCompatActivity
     sheetBehavior = BottomSheetBehavior.from(bottomSheetLayout);
     bottomSheetArrowImageView = findViewById(R.id.bottom_sheet_arrow);
     modelView = findViewById((R.id.trace_list));
-
+    stopButton = findViewById(R.id.stopRecognizeButton);
+    stopButton.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        onDetectionEnd(isEmpty, isTraceChanged);
+      }
+    });
     modelStrings = getModelStrings(getAssets(), ASSET_PATH);
     modelView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
     parameters.add(new Params(constants.Longitude,"0"));
@@ -245,7 +250,18 @@ public abstract class CameraActivity extends AppCompatActivity
   }
 
   private void setSignOnTrace(String[] traceFromExtras){
-    TraceSignsOrder = traceFromExtras;
+    isTraceChanged = false;
+    if(traceFromExtras == null){
+      TraceSignsOrder = null;
+      isEmpty = true;
+    }
+    else {
+      TraceSignsOrder = traceFromExtras;
+    }
+  }
+
+  private void setTraceNumber(int traceNumber){
+    TraceNumber = traceNumber;
   }
 
   protected ArrayList<String> getModelStrings(AssetManager mgr, String path){
@@ -643,6 +659,7 @@ public abstract class CameraActivity extends AppCompatActivity
 
   protected abstract void setNumThreads(int numThreads);
 
+  protected abstract void onDetectionEnd(boolean isEmpty, boolean isTraceChanged);
 }
 
 

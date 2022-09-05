@@ -3,8 +3,11 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/athos/AndroidStudioProjects/PolandSignsDetection/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.1445" />
+        <entry key="..\:/Users/athos/AndroidStudioProjects/PolandSignsDetection/app/src/main/res/drawable-v24/item_selector.xml" value="0.1445" />
         <entry key="..\:/Users/athos/AndroidStudioProjects/PolandSignsDetection/app/src/main/res/drawable/bottom_sheet_bg.xml" value="0.1445" />
         <entry key="..\:/Users/athos/AndroidStudioProjects/PolandSignsDetection/app/src/main/res/drawable/ic_baseline_add.xml" value="0.1445" />
+        <entry key="..\:/Users/athos/AndroidStudioProjects/PolandSignsDetection/app/src/main/res/drawable/ic_baseline_remove.xml" value="0.1445" />
         <entry key="..\:/Users/athos/AndroidStudioProjects/PolandSignsDetection/app/src/main/res/drawable/ic_launcher_background.xml" value="0.1445" />
         <entry key="..\:/Users/athos/AndroidStudioProjects/PolandSignsDetection/app/src/main/res/drawable/rectangle.xml" value="0.1445" />
         <entry key="..\:/Users/athos/AndroidStudioProjects/PolandSignsDetection/app/src/main/res/layout/activity_main.xml" value="0.33" />

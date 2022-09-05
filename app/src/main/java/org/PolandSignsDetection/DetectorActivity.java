@@ -16,7 +16,6 @@
 
 package org.PolandSignsDetection;
 
-import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -26,24 +25,15 @@ import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.RectF;
 import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
 import android.media.ImageReader.OnImageAvailableListener;
 import android.os.SystemClock;
 import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.Toast;
-
-import androidx.constraintlayout.widget.ConstraintLayout;
-
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
-
 import org.PolandSignsDetection.customview.OverlayView;
 import org.PolandSignsDetection.customview.OverlayView.DrawCallback;
 import org.PolandSignsDetection.env.BorderedText;
@@ -62,7 +52,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     private static final Logger LOGGER = new Logger();
 
     private static final DetectorMode MODE = DetectorMode.TF_OD_API;
-    private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.8f;
+    private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.65f;
     private static final boolean MAINTAIN_ASPECT = true;
     private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 640);
     private static final boolean SAVE_PREVIEW_BITMAP = false;
@@ -105,6 +95,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
         try {
             detector = DetectorFactory.getDetector(getAssets(), modelString);
+            detector.useGpu();
+            detector.setNumThreads(1);
         } catch (final IOException e) {
             e.printStackTrace();
             LOGGER.e(e, "Exception initializing classifier!");
@@ -149,77 +141,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 });
 
         tracker.setFrameConfiguration(previewWidth, previewHeight, sensorOrientation);
-    }
-
-    protected void updateActiveModel() {
-        // Get UI information before delegating to background
-        final int modelIndex = modelView.getCheckedItemPosition();
-        final int deviceIndex = deviceView.getCheckedItemPosition();
-        String threads = threadsTextView.getText().toString().trim();
-        final int numThreads = Integer.parseInt(threads);
-
-        handler.post(() -> {
-            if (modelIndex == currentModel && deviceIndex == currentDevice
-                    && numThreads == currentNumThreads) {
-                return;
-            }
-            currentModel = modelIndex;
-            currentDevice = deviceIndex;
-            currentNumThreads = numThreads;
-
-            // Disable classifier while updating
-            if (detector != null) {
-                detector.close();
-                detector = null;
-            }
-
-            // Lookup names of parameters.
-            String modelString = modelStrings.get(modelIndex);
-            String device = deviceStrings.get(deviceIndex);
-
-            LOGGER.i("Changing model to " + modelString + " device " + device);
-
-            // Try to load model.
-
-            try {
-                detector = DetectorFactory.getDetector(getAssets(), modelString);
-                // Customize the interpreter to the type of device we want to use.
-                if (detector == null) {
-                    return;
-                }
-            }
-            catch(IOException e) {
-                e.printStackTrace();
-                LOGGER.e(e, "Exception in updateActiveModel()");
-                Toast toast =
-                        Toast.makeText(
-                                getApplicationContext(), "Classifier could not be initialized", Toast.LENGTH_SHORT);
-                toast.show();
-                finish();
-            }
-
-
-            if (device.equals("CPU")) {
-                detector.useCPU();
-            } else if (device.equals("GPU")) {
-                detector.useGpu();
-            } else if (device.equals("NNAPI")) {
-                detector.useNNAPI();
-            }
-            detector.setNumThreads(numThreads);
-
-            int cropSize = detector.getInputSize();
-            croppedBitmap = Bitmap.createBitmap(cropSize, cropSize, Config.ARGB_8888);
-
-            frameToCropTransform =
-                    ImageUtils.getTransformationMatrix(
-                            previewWidth, previewHeight,
-                            cropSize, cropSize,
-                            sensorOrientation, MAINTAIN_ASPECT);
-
-            cropToFrameTransform = new Matrix();
-            frameToCropTransform.invert(cropToFrameTransform);
-        });
     }
 
     @Override
@@ -305,10 +226,22 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                                 new Runnable() {
                                     @Override
                                     public void run() {
-                                        if(newSign) ChangeImage();
-                                        showInference(lastProcessingTimeMs + "km/h");
+                                        if (true) {
+                                            ChangeImage();
+                                            for (Params param : parameters) {
+                                                if (param.getTitle().equals(constants.Longitude)) {
+                                                    param.setValue(Double.toString(gps.longitude));
+                                                } else if (param.getTitle().equals(constants.Latitude)) {
+                                                    param.setValue(Double.toString(gps.latitude));
+                                                } else if (param.getTitle().equals(constants.InterferenceTime)) {
+                                                    param.setValue(Double.toString(lastProcessingTimeMs));
+                                                }
+                                            }
+                                            modelAdapter = new TextViewAdapter(DetectorActivity.this, parameters);
+                                            modelView.setAdapter(modelAdapter);
+                                            showInference(lastProcessingTimeMs + "km/h");
+                                        }
                                     }
-
                                 });
 
                     }
@@ -338,11 +271,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     // checkpoints.
     private enum DetectorMode {
         TF_OD_API;
-    }
-
-    @Override
-    protected void setUseNNAPI(final boolean isChecked) {
-        runInBackground(() -> detector.setUseNNAPI(isChecked));
     }
 
     @Override

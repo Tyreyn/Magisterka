@@ -37,8 +37,8 @@
 
     <include
         android:id="@+id/bottom_sheet_layout"
-        layout="@layout/tfe_od_layout_bottom_sheet" />
-
+        layout="@layout/tfe_od_layout_bottom_sheet"
+></include>
     <include
         android:id="@+id/layout_traffic_signs"
         layout="@layout/tfe_od_layout_traffic_signs_sheet"

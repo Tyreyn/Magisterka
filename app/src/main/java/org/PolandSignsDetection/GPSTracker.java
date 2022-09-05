@@ -92,6 +92,9 @@ public class GPSTracker extends AppCompatActivity {
             speed = location.getSpeed();
         }catch(Exception ex)
         {
+            longitude = 0;
+            latitude = 0;
+            speed = 0;
             Toast.makeText(mContext, "GPS niedostępny", Toast.LENGTH_SHORT).show();
         }
     }

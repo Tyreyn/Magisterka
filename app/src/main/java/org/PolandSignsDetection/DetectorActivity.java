@@ -26,6 +26,7 @@ import android.graphics.Paint.Style;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.media.ImageReader.OnImageAvailableListener;
+import android.os.CountDownTimer;
 import android.os.SystemClock;
 import android.util.Log;
 import android.util.Size;
@@ -78,7 +79,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
     private BorderedText borderedText;
 
-
+    private boolean isSameSignAway = true;
 
     @Override
     public void onPreviewSizeChosen(final Size size, final int rotation) {
@@ -169,87 +170,104 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         }
 
         runInBackground(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        gps.performLocationUpdate();
+            new Runnable() {
+                @Override
+                public void run() {
+                    gps.performLocationUpdate();
 
-                        showFrameInfo(Double.toString(gps.latitude));
-                        showCropInfo(Double.toString(gps.longitude));
-                        LOGGER.d("latitude: " + gps.latitude+ "longitude: " + gps.longitude);
-                        LOGGER.i("Running detection on image " + currTimestamp);
-                        final long startTime = SystemClock.uptimeMillis();
-                        final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);
-                        lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
+                    showFrameInfo(Double.toString(gps.latitude));
+                    showCropInfo(Double.toString(gps.longitude));
+                    LOGGER.d("latitude: " + gps.latitude+ "longitude: " + gps.longitude);
+                    LOGGER.i("Running detection on image " + currTimestamp);
+                    final long startTime = SystemClock.uptimeMillis();
+                    final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);
+                    lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
-                        Log.e("CHECK", "run: " + results.size());
+                    Log.e("CHECK", "run: " + results.size());
 
-                        cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
-                        final Canvas canvas = new Canvas(cropCopyBitmap);
-                        final Paint paint = new Paint();
-                        paint.setColor(Color.RED);
-                        paint.setStyle(Style.STROKE);
-                        paint.setStrokeWidth(2.0f);
+                    cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
+                    final Canvas canvas = new Canvas(cropCopyBitmap);
+                    final Paint paint = new Paint();
+                    paint.setColor(Color.RED);
+                    paint.setStyle(Style.STROKE);
+                    paint.setStrokeWidth(2.0f);
 
-                        float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
-                        switch (MODE) {
-                            case TF_OD_API:
-                                minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
-                                break;
-                        }
+                    float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
+                    switch (MODE) {
+                        case TF_OD_API:
+                            minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
+                            break;
+                    }
 
-                        final List<Classifier.Recognition> mappedRecognitions =
-                                new LinkedList<Classifier.Recognition>();
+                    final List<Classifier.Recognition> mappedRecognitions =
+                            new LinkedList<Classifier.Recognition>();
 
-                        for (final Classifier.Recognition result : results) {
-                            final RectF location = result.getLocation();
-                            if (location != null && result.getConfidence() >= minimumConfidence) {
-                                canvas.drawRect(location, paint);
-                                String id = result.getTitle();
-                                Log.e("Znaleziono: {0}", id);
-                                cropToFrameTransform.mapRect(location);
-                                if (!id.equals(FiveLastSigns.peekLast())){
-                                    SetLastFiveSigns(id);
-                                    Log.d("Ostatnie piec: {0}", String.valueOf(FiveLastSigns));
-                                }
-                                result.setLocation(location);
-                                mappedRecognitions.add(result);
+                    for (final Classifier.Recognition result : results) {
+                        final RectF location = result.getLocation();
+                        if (location != null && result.getConfidence() >= minimumConfidence) {
+                            canvas.drawRect(location, paint);
+                            String id = result.getTitle();
+                            Log.e("Znaleziono: {0}", id);
+                            cropToFrameTransform.mapRect(location);
+                            if (id.equals(FiveLastSigns.peekLast())
+                                && isSameSignAway)
+                            {
+                                SetLastFiveSigns(id);
+                                Log.d("Ostatnie piec: {0}", String.valueOf(FiveLastSigns));
                             }
+                            else if(!id.equals(FiveLastSigns.peekLast())){
+                                SetLastFiveSigns(id);
+                                Log.d("Ostatnie piec: {0}", String.valueOf(FiveLastSigns));
+                            }
+                            result.setLocation(location);
+                            mappedRecognitions.add(result);
                         }
+                    }
 
-                        tracker.trackResults(mappedRecognitions, currTimestamp);
-                        trackingOverlay.postInvalidate();
+                    tracker.trackResults(mappedRecognitions, currTimestamp);
+                    trackingOverlay.postInvalidate();
 
-                        computingDetection = false;
+                    computingDetection = false;
 
-                        runOnUiThread(
-                                new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        if (true) {
-                                            ChangeImage();
-                                            for (Params param : parameters) {
-                                                if (param.getTitle().equals(constants.Longitude)) {
-                                                    param.setValue(Double.toString(gps.longitude));
-                                                } else if (param.getTitle().equals(constants.Latitude)) {
-                                                    param.setValue(Double.toString(gps.latitude));
-                                                } else if (param.getTitle().equals(constants.InterferenceTime)) {
-                                                    param.setValue(Double.toString(lastProcessingTimeMs));
-                                                }
-                                            }
-                                            modelAdapter = new TextViewAdapter(DetectorActivity.this, parameters);
-                                            modelView.setAdapter(modelAdapter);
-                                            showInference(lastProcessingTimeMs + "km/h");
+                    runOnUiThread(
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                if (newSign) {
+                                    ChangeImage();
+                                    for (Params param : parameters) {
+                                        if (param.getTitle().equals(constants.Longitude)) {
+                                            param.setValue(Double.toString(gps.longitude));
+                                        } else if (param.getTitle().equals(constants.Latitude)) {
+                                            param.setValue(Double.toString(gps.latitude));
+                                        } else if (param.getTitle().equals(constants.InterferenceTime)) {
+                                            param.setValue(Double.toString(lastProcessingTimeMs));
                                         }
                                     }
-                                });
+                                    modelAdapter = new TextViewAdapter(DetectorActivity.this, parameters);
+                                    modelView.setAdapter(modelAdapter);
+                                    showInference(lastProcessingTimeMs + "km/h");
+                                }
+                            }
+                        });
 
-                    }
-                });
+                }
+            });
     }
 
 
     public void SetLastFiveSigns(String newSignTitle){
+        new CountDownTimer(5000, 1000) {
+
+            public void onTick(long millisUntilFinished) {
+            }
+
+            public void onFinish() {
+                isSameSignAway = true;
+            }
+
+        }.start();
+        isSameSignAway = false;
         FiveLastSigns.add(newSignTitle);
         if(FiveLastSigns.size() >= 5){
             FiveLastSigns.removeFirst();

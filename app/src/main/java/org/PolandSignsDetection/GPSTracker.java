@@ -8,13 +8,10 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
@@ -89,9 +86,14 @@ public class GPSTracker extends AppCompatActivity {
 
 
     private void updateLocation(Location location){
-        longitude = location.getLongitude();
-        latitude = location.getLatitude();
-        speed = location.getSpeed();
+        try {
+            longitude = location.getLongitude();
+            latitude = location.getLatitude();
+            speed = location.getSpeed();
+        }catch(Exception ex)
+        {
+            Toast.makeText(mContext, "GPS niedostępny", Toast.LENGTH_SHORT).show();
+        }
     }
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {

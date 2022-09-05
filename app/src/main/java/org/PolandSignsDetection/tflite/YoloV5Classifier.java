@@ -203,12 +203,6 @@ public class YoloV5Classifier implements Classifier {
         recreateInterpreter();
     }
 
-    public void useNNAPI() {
-        nnapiDelegate = new NnApiDelegate();
-        tfliteOptions.addDelegate(nnapiDelegate);
-        recreateInterpreter();
-    }
-
     @Override
     public float getObjThresh() {
         return MainActivity.MINIMUM_CONFIDENCE_TF_OD_API;

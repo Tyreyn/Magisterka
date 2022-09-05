@@ -37,12 +37,15 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Trace;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import android.util.Size;
+import android.view.LayoutInflater;
 import android.view.Surface;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.AdapterView;
@@ -58,7 +61,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 
 import org.PolandSignsDetection.env.ImageUtils;
@@ -99,7 +101,7 @@ public abstract class CameraActivity extends AppCompatActivity
   protected TextView frameValueTextView, cropValueTextView, inferenceTimeTextView;
   protected ImageView bottomSheetArrowImageView;
   private ImageView plusImageView, minusImageView;
-  protected ListView deviceView;
+  protected TextViewAdapter modelAdapter;
   protected TextView threadsTextView;
   protected ListView modelView;
   /** Current indices of device and model. */
@@ -107,7 +109,7 @@ public abstract class CameraActivity extends AppCompatActivity
   int currentModel = -1;
   int currentNumThreads = -1;
   protected  ArrayList<ImageView> signImages = new ArrayList<ImageView>();
-  ArrayList<String> deviceStrings = new ArrayList<String>();
+  ArrayList<Params> parameters = new ArrayList<Params>();
   public LinkedList<String> FiveLastSigns = new LinkedList<String>();
   protected boolean newSign = false;
   public GPSTracker gps;
@@ -140,29 +142,6 @@ public abstract class CameraActivity extends AppCompatActivity
     } else {
       requestPermission();
     }
-
-    threadsTextView = findViewById(R.id.threads);
-    currentNumThreads = Integer.parseInt(threadsTextView.getText().toString().trim());
-    plusImageView = findViewById(R.id.plus);
-    minusImageView = findViewById(R.id.minus);
-    deviceView = findViewById(R.id.device_list);
-    deviceStrings.add("CPU");
-    deviceStrings.add("GPU");
-    deviceStrings.add("NNAPI");
-    deviceView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-    ArrayAdapter<String> deviceAdapter =
-            new ArrayAdapter<>(
-                    CameraActivity.this , R.layout.deviceview_row, R.id.deviceview_row_text, deviceStrings);
-    deviceView.setAdapter(deviceAdapter);
-    deviceView.setItemChecked(defaultDeviceIndex, true);
-    currentDevice = defaultDeviceIndex;
-    deviceView.setOnItemClickListener(
-            new AdapterView.OnItemClickListener() {
-              @Override
-              public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                updateActiveModel();
-              }
-            });
     signSheetLayout = findViewById(R.id.layout_traffic_signs);
 
     // Inicjalizacja pusty pól znaków na kamerze.
@@ -182,9 +161,11 @@ public abstract class CameraActivity extends AppCompatActivity
 
     modelStrings = getModelStrings(getAssets(), ASSET_PATH);
     modelView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-    ArrayAdapter<String> modelAdapter =
-            new ArrayAdapter<>(
-                    CameraActivity.this , R.layout.listview_row, R.id.listview_row_text, modelStrings);
+    parameters.add(new Params(constants.Longitude,"0"));
+    parameters.add(new Params(constants.Latitude,"0"));
+    parameters.add(new Params(constants.InterferenceTime,"0"));
+
+    modelAdapter = new TextViewAdapter(this, parameters);
     modelView.setAdapter(modelAdapter);
     modelView.setItemChecked(defaultModelIndex, true);
     currentModel = defaultModelIndex;
@@ -192,7 +173,6 @@ public abstract class CameraActivity extends AppCompatActivity
             new AdapterView.OnItemClickListener() {
               @Override
               public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                updateActiveModel();
               }
             });
 
@@ -247,8 +227,6 @@ public abstract class CameraActivity extends AppCompatActivity
     cropValueTextView = findViewById(R.id.crop_info);
     inferenceTimeTextView = findViewById(R.id.inference_info);
 
-    plusImageView.setOnClickListener(this);
-    minusImageView.setOnClickListener(this);
     InitializeFiveSigns();
   }
 
@@ -623,32 +601,8 @@ public abstract class CameraActivity extends AppCompatActivity
     }
   }
 
-//  @Override
-//  public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-//    setUseNNAPI(isChecked);
-//    if (isChecked) apiSwitchCompat.setText("NNAPI");
-//    else apiSwitchCompat.setText("TFLITE");
-//  }
-
   @Override
   public void onClick(View v) {
-    if (v.getId() == R.id.plus) {
-      String threads = threadsTextView.getText().toString().trim();
-      int numThreads = Integer.parseInt(threads);
-      if (numThreads >= 9) return;
-      numThreads++;
-      threadsTextView.setText(String.valueOf(numThreads));
-      setNumThreads(numThreads);
-    } else if (v.getId() == R.id.minus) {
-      String threads = threadsTextView.getText().toString().trim();
-      int numThreads = Integer.parseInt(threads);
-      if (numThreads == 1) {
-        return;
-      }
-      numThreads--;
-      threadsTextView.setText(String.valueOf(numThreads));
-      setNumThreads(numThreads);
-    }
   }
 
   protected void showFrameInfo(String frameInfo) {
@@ -663,7 +617,6 @@ public abstract class CameraActivity extends AppCompatActivity
     inferenceTimeTextView.setText(inferenceTime);
   }
 
-  protected abstract void updateActiveModel();
   protected abstract void processImage();
 
   protected abstract void onPreviewSizeChosen(final Size size, final int rotation);
@@ -674,5 +627,65 @@ public abstract class CameraActivity extends AppCompatActivity
 
   protected abstract void setNumThreads(int numThreads);
 
-  protected abstract void setUseNNAPI(boolean isChecked);
+}
+
+
+class TextViewAdapter extends ArrayAdapter<Params> {
+
+  private View listItem;
+
+  TextViewAdapter(@NonNull Context context, ArrayList<Params> items) {
+    super(context, 0, items);
+  }
+
+  @NonNull
+  @Override
+  public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+
+    listItem = convertView;
+    if (listItem == null) {
+      listItem = LayoutInflater.from(getContext()).inflate(R.layout.tracesview_row, parent, false);
+    }
+
+    // Get the {@link Word} object located at this position in the list
+    Params currentItem = getItem(position);
+
+    TextView title = listItem.findViewById(R.id.deviceView_row_name);
+    title.setTag(position);
+    title.setText(currentItem.getTitle());
+
+    TextView value = listItem.findViewById(R.id.deviceView_row_value);
+    title.setTag(position);
+    value.setText(currentItem.getValue());
+
+    return listItem;
+  }
+
+  public void updateValue(Params param){
+    TextView value = listItem.findViewById(R.id.deviceView_row_value);
+  }
+
+}
+
+class Params{
+  private String mValue;
+  private String mTitle;
+
+
+  Params(String title, String value) {
+    this.mValue = value;
+    this.mTitle = title;
+  }
+
+  public void setValue(String newValue) {
+    this.mValue = newValue;
+  }
+
+  String getTitle() {
+    return mTitle;
+  }
+
+  String getValue() {
+    return mValue;
+  }
 }

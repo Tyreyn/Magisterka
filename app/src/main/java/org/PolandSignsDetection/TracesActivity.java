@@ -1,12 +1,19 @@
 package org.PolandSignsDetection;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Trace;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import org.PolandSignsDetection.env.Logger;
 import java.io.BufferedReader;
@@ -31,6 +38,7 @@ public class TracesActivity extends AppCompatActivity {
         setContentView(R.layout.choose_trace);
         readTracesFile();
         traceView = (LinearLayout) findViewById(R.id.available_trace);
+
         /**traceView = findViewById(R.id.trace_list);
         ArrayAdapter<String> deviceAdapter =
                 new ArrayAdapter<>(

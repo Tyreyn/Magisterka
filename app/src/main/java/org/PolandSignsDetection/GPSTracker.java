@@ -44,8 +44,8 @@ public class GPSTracker extends AppCompatActivity {
         mActivity = (Activity) context;
         locationRequest = new LocationRequest().create();
         // In ms
-        locationRequest.setInterval(1000 * 5);
-        locationRequest.setFastestInterval(1000);
+        locationRequest.setInterval(100);
+        locationRequest.setFastestInterval(100);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
         locationCallback = new LocationCallback() {
@@ -79,7 +79,9 @@ public class GPSTracker extends AppCompatActivity {
         else
         {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
-                mActivity.requestPermissions(new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSIONS_FINE_LOCATION);
+                mActivity.requestPermissions(
+                        new String[] {Manifest.permission.ACCESS_FINE_LOCATION},
+                        PERMISSIONS_FINE_LOCATION);
             }
         }
     }

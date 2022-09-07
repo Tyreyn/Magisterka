@@ -128,6 +128,8 @@ public abstract class CameraActivity extends AppCompatActivity
     String[] TraceSignsOrder = null;
 
     gps = new GPSTracker(this);
+    gps.performLocationUpdate();
+
     if (savedInstanceState == null) {
       Bundle extras = getIntent().getExtras();
       if(extras == null) {
@@ -243,7 +245,7 @@ public abstract class CameraActivity extends AppCompatActivity
         });
 
     frameValueTextView = findViewById(R.id.frame_info);
-    cropValueTextView = findViewById(R.id.crop_info);
+    //cropValueTextView = findViewById(R.id.crop_info);
     inferenceTimeTextView = findViewById(R.id.inference_info);
     setSignOnTrace(TraceSignsOrder);
     InitializeFiveSigns();

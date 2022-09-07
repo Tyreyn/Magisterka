@@ -18,7 +18,7 @@
     <application
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/tfe_od_app_name"
+        android:label="Rozpoznanie polskich znaków"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme.ObjectDetection"
@@ -27,7 +27,7 @@
         android:installLocation="internalOnly">
         <activity
             android:name=".MainActivity"
-            android:label="@string/tfe_od_app_name"
+            android:label="Rozpoznanie polskich znaków"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

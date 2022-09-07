@@ -21,9 +21,9 @@ import android.graphics.RectF;
 import android.os.Build;
 import android.util.Log;
 
+import org.PolandSignsDetection.constants;
 import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.Tensor;
-import org.PolandSignsDetection.MainActivity;
 import org.PolandSignsDetection.env.Logger;
 import org.PolandSignsDetection.env.Utils;
 import org.tensorflow.lite.gpu.GpuDelegate;
@@ -221,7 +221,7 @@ public class YoloV5ClassifierDetect implements Classifier {
 
     @Override
     public float getObjThresh() {
-        return MainActivity.MINIMUM_CONFIDENCE_TF_OD_API;
+        return constants.MINIMUM_CONFIDENCE_TF_OD_API;
     }
 
     private static final Logger LOGGER = new Logger();

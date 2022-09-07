@@ -42,6 +42,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Array;
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -63,7 +64,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     private static final Logger LOGGER = new Logger();
 
     private static final DetectorMode MODE = DetectorMode.TF_OD_API;
-    private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.65f;
     private static final boolean MAINTAIN_ASPECT = true;
     private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 640);
     private static final boolean SAVE_PREVIEW_BITMAP = false;
@@ -183,10 +183,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             new Runnable() {
                 @Override
                 public void run() {
-                    gps.performLocationUpdate();
-
-                    showFrameInfo(Double.toString(gps.latitude));
-                    showCropInfo(Double.toString(gps.longitude));
                     LOGGER.d("latitude: " + gps.latitude+ "longitude: " + gps.longitude);
                     LOGGER.i("Running detection on image " + currTimestamp);
                     final long startTime = SystemClock.uptimeMillis();
@@ -202,10 +198,10 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                     paint.setStyle(Style.STROKE);
                     paint.setStrokeWidth(2.0f);
 
-                    float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
+                    float minimumConfidence = constants.MINIMUM_CONFIDENCE_TF_OD_API;
                     switch (MODE) {
                         case TF_OD_API:
-                            minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
+                            minimumConfidence = constants.MINIMUM_CONFIDENCE_TF_OD_API;
                             break;
                     }
 
@@ -258,8 +254,16 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                                     }
                                     modelAdapter = new TextViewAdapter(DetectorActivity.this, parameters);
                                     modelView.setAdapter(modelAdapter);
-                                    showInference(lastProcessingTimeMs + "km/h");
                                 }
+                                DecimalFormat df = new DecimalFormat("#,##");
+                                // Rounds speed
+                                double speed = gps.speed*3.6;
+                                if(speed>5){
+                                    isSameSignAway = true;
+                                }
+                                showFrameInfo((int)speed + " km/h");
+                                showInference(Double.toString(lastProcessingTimeMs) + " m/s");
+
                             }
                         });
 
@@ -269,16 +273,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
 
     public void SetLastFiveSigns(String newSignTitle){
-        new CountDownTimer(5000, 1000) {
-
-            public void onTick(long millisUntilFinished) {
-            }
-
-            public void onFinish() {
-                isSameSignAway = true;
-            }
-
-        }.start();
         isSameSignAway = false;
         FiveLastSigns.add(newSignTitle);
         SignsOnTrace.add(newSignTitle);

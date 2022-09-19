@@ -44,8 +44,12 @@ import java.io.PrintWriter;
 import java.lang.reflect.Array;
 import java.text.DecimalFormat;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
 import org.PolandSignsDetection.customview.OverlayView;
 import org.PolandSignsDetection.customview.OverlayView.DrawCallback;
 import org.PolandSignsDetection.env.BorderedText;
@@ -90,6 +94,10 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     private BorderedText borderedText;
 
     private boolean isSameSignAway = true;
+
+    private String OldSignId;
+
+    private boolean isSameSign;
 
     @Override
     public void onPreviewSizeChosen(final Size size, final int rotation) {
@@ -216,22 +224,29 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                             Log.e("Znaleziono: {0}", id);
                             cropToFrameTransform.mapRect(location);
                             if (id.equals(FiveLastSigns.peekLast())
-                                && isSameSignAway)
-                            {
+                                    && isSameSignAway) {
+                                OldSignId = id;
                                 SetLastFiveSigns(id);
                                 Log.d("Ostatnie piec: {0}", String.valueOf(FiveLastSigns));
                                 Log.d("{0}", String.valueOf(SignsOnTrace));
-                            }
-                            else if(!id.equals(FiveLastSigns.peekLast())){
+                            } else if (!id.equals(FiveLastSigns.peekLast())) {
+                                OldSignId = id;
                                 SetLastFiveSigns(id);
                                 Log.d("Ostatnie piec: {0}", String.valueOf(FiveLastSigns));
                                 Log.d("{0}", String.valueOf(SignsOnTrace));
                             }
                             result.setLocation(location);
                             mappedRecognitions.add(result);
+                            if (id == FiveLastSigns.getLast()) {
+                                isSameSign = true;
+                            } else {
+                                isSameSign = false;
+                            }
                         }
                     }
 
+                    if(mappedRecognitions.isEmpty())
+                        isSameSign = false;
                     tracker.trackResults(mappedRecognitions, currTimestamp);
                     trackingOverlay.postInvalidate();
 
@@ -258,7 +273,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                                 DecimalFormat df = new DecimalFormat("#,##");
                                 // Rounds speed
                                 double speed = gps.speed*3.6;
-                                if(speed>5){
+                                if(speed>constants.MinimalSpeedToEnableDetecting
+                                   && !isSameSign){
+
                                     isSameSignAway = true;
                                 }
                                 showFrameInfo((int)speed + " km/h");
@@ -372,6 +389,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             DetectorActivity.this.onBackPressed();
         }
     }
+
     private void WriteTraceToFile(){
         String pathToFile = getFilesDir().getAbsolutePath()+ File.separator+
                 constants.tracesDirName+"trace"+TraceNumber+".txt";

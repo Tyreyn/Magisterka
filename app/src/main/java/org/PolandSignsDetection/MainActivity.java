@@ -34,6 +34,9 @@ public class MainActivity extends AppCompatActivity {
     //TODO zmienić na false
     private boolean DEBUG = false;
 
+    /**
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

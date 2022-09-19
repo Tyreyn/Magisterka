@@ -100,7 +100,7 @@
             android:id="@+id/stopRecognizeButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Zakończ trase" />
+            android:text="Zakończ trasę" />
     </RelativeLayout>
 
     <View

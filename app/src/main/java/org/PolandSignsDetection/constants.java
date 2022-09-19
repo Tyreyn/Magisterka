@@ -25,4 +25,7 @@ public interface constants {
     // Minimalna wartość detekcji
     public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.85f;
 
+    // Minimalna wartość predkości pozwalającej na detekcję kolejnego znaku.
+    public int MinimalSpeedToEnableDetecting = 5;
+
 }

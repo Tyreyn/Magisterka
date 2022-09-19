@@ -14,6 +14,6 @@
         android:id="@+id/CleanButton"
         android:layout_width="match_parent"
         android:layout_height="49dp"
-        android:text="Wyczyść trase" />
+        android:text="Wyczyść trasę" />
 
 </LinearLayout>
